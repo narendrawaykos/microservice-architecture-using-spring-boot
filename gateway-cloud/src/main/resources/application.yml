@@ -1,0 +1,73 @@
+
+##spring.application.name=gateway-service
+##spring.cloud.gateway.routes[0].id=order-service
+##spring.cloud.gateway.routes[0].uri=lb://order-service
+##spring.cloud.gateway.routes[0].predicates[0].args.Path=/order/**
+##spring.cloud.gateway.routes[0].predicates[0].name=Path
+##spring.cloud.gateway.routes[0].filters[0].name=CircuitBreaker
+##spring.cloud.gateway.routes[0].filters[0].args.name=order-service
+##spring.cloud.gateway.routes[0].filters[0].args.fallbackuri=forward:/orderFallBack
+##
+##spring.cloud.gateway.routes[1].id=payment-service
+##spring.cloud.gateway.routes[1].uri=lb://payment-service
+##spring.cloud.gateway.routes[1].predicates[0].name=Path
+##spring.cloud.gateway.routes[1].predicates[0].args.Path=/payment/**
+##spring.cloud.gateway.routes[1].filters[0].name=CircuitBreaker
+##spring.cloud.gateway.routes[1].filters[0].args.name=payment-service
+##spring.cloud.gateway.routes[1].filters[0].args.fallbackuri=forward:/paymentFallBack
+
+server:
+  port: 9999
+
+spring:
+  application:
+    name: GATEWAY-SERVICE
+  cloud:
+    gateway:
+      routes:
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/order/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: order-service
+                fallbackuri: forward:/orderFallBack
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: payment-service
+                fallbackuri: forward:/paymentFallback     
+#  config:
+#   import: optional:configserver:http://localhost:9003/
+
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+     defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: localhost
+
+management:
+ endpoints:
+  web:
+   exposure:
+     include: hysrix.stream
+
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000  
+
